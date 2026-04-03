@@ -61,3 +61,20 @@ class TaskController:
         self.taches_objets.append(nouvelle_tache)
         self.sauvegarder_taches()
         print(f"Objet tâche '{titre}' (Type: {type_tache}) instancié et sauvegardé.")
+    
+    def supprimer_tache(self, task_id):
+        """Supprime une tâche via son ID et sauvegarde."""
+        # On garde toutes les tâches SAUF celle qui a cet ID
+        self.taches_objets = [t for t in self.taches_objets if t.id != task_id]
+        self.sauvegarder_taches()
+
+    def modifier_tache(self, task_id, titre, priorite, date_echeance, statut):
+        """Modifie les attributs d'une tâche existante."""
+        for t in self.taches_objets:
+            if t.id == task_id:
+                t.title = titre
+                t.priority = priorite
+                t.due_date = date_echeance
+                t.status = statut
+                break
+        self.sauvegarder_taches()

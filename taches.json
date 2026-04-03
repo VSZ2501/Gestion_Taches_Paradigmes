@@ -1,45 +1,26 @@
 [
     {
-        "id": 2,
-        "titre": "Approuver l'accord légal",
-        "statut": "A faire",
+        "id": 1,
+        "titre": "tES",
+        "statut": "Terminee",
         "priorite": 1,
-        "date_echeance": "2023-08-15",
+        "date_echeance": "2026-04-03",
+        "type": "Simple"
+    },
+    {
+        "id": 2,
+        "titre": "tqe",
+        "statut": "A faire",
+        "priorite": 2,
+        "date_echeance": "2026-04-08",
         "type": "Simple"
     },
     {
         "id": 3,
-        "titre": "Mettre à jour la boutique en ligne",
+        "titre": "d,u,d",
         "statut": "A faire",
         "priorite": 3,
-        "date_echeance": "2023-09-15",
-        "type": "Simple"
-    },
-    {
-        "id": 4,
-        "titre": "Vérifier le RGPD",
-        "statut": "A faire",
-        "priorite": 2,
-        "date_echeance": "2026-04-05",
-        "type": "Simple"
-    },
-    {
-        "id": 5,
-        "titre": "Test",
-        "statut": "A faire",
-        "priorite": 3,
-        "date_echeance": "2021-01-01",
-        "type": "Complex",
-        "dependencies": [
-            1
-        ]
-    },
-    {
-        "id": 6,
-        "titre": "Test 2",
-        "statut": "A faire",
-        "priorite": 1,
-        "date_echeance": "2027-01-01",
+        "date_echeance": "2026-04-15",
         "type": "Simple"
     }
 ]
