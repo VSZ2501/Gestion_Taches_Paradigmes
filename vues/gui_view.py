@@ -13,7 +13,7 @@ class GUIView:
         self.root.geometry("900x550")
         self.controller = TaskController()
         
-        self.label_titre = tk.Label(self.root, text="Plateforme de Gestion Intelligente", font=("Arial", 16, "bold"))
+        self.label_titre = tk.Label(self.root, text="Plateforme de Gestion de tâches - Paradigme de Programmation", font=("Arial", 16, "bold"))
         self.label_titre.pack(pady=10)
 
         # --- Zone d'actions principales ---
@@ -107,13 +107,17 @@ class GUIView:
         valeurs = self.tree.item(selection[0], 'values')
         task_id = int(valeurs[0])
         titre_actuel = valeurs[1]
+        type_actuel = valeurs[2]
         priorite_actuelle = valeurs[3]
         statut_actuel = valeurs[4]
         date_actuelle = valeurs[5]
 
+        # On récupère l'objet réel pour lire ses dépendances
+        tache_actuelle = next((t for t in self.controller.taches_objets if t.id == task_id), None)
+
         fenetre_mod = Toplevel(self.root)
         fenetre_mod.title(f"Modifier la tâche #{task_id}")
-        fenetre_mod.geometry("350x300")
+        fenetre_mod.geometry("350x330")
 
         tk.Label(fenetre_mod, text="Titre :").pack(pady=2)
         entree_titre = tk.Entry(fenetre_mod, width=30)
@@ -133,7 +137,6 @@ class GUIView:
         tk.Label(fenetre_mod, text="Date d'échéance :").pack(pady=2)
         entree_date = DateEntry(fenetre_mod, width=12, background='darkblue', 
                                 foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
-        # On définit la date du widget sur la date actuelle de la tâche
         try:
             date_obj = datetime.strptime(date_actuelle, "%Y-%m-%d").date()
             entree_date.set_date(date_obj)
@@ -141,10 +144,21 @@ class GUIView:
             pass
         entree_date.pack(pady=2)
 
+        # --- NOUVEAU : Champ dépendances si la tâche est Complexe ---
+        entree_deps = None
+        if type_actuel == "Complex" and hasattr(tache_actuelle, 'dependencies'):
+            tk.Label(fenetre_mod, text="Dépendances (ID séparés par des virgules) :").pack(pady=2)
+            entree_deps = tk.Entry(fenetre_mod, width=15)
+            # Remplir avec les dépendances actuelles
+            deps_str = ",".join(map(str, tache_actuelle.dependencies))
+            entree_deps.insert(0, deps_str)
+            entree_deps.pack(pady=2)
+
         def sauvegarder_modification():
             nouveau_titre = entree_titre.get()
             nouveau_statut = entree_statut.get()
             nouvelle_date = entree_date.get()
+            nouvelle_date_obj = entree_date.get_date()
             
             try:
                 nouvelle_priorite = int(entree_priorite.get())
@@ -152,7 +166,39 @@ class GUIView:
                 messagebox.showerror("Erreur", "La priorité doit être un nombre.", parent=fenetre_mod)
                 return
 
-            self.controller.modifier_tache(task_id, nouveau_titre, nouvelle_priorite, nouvelle_date, nouveau_statut)
+            # Vérification des dépendances pour le statut "Terminee"
+            if nouveau_statut == "Terminee" and type_actuel == "Complex":
+                deps_a_verifier = getattr(tache_actuelle, 'dependencies', [])
+                dependances_non_terminees = []
+                for dep_id in deps_a_verifier:
+                    dep_tache = next((t for t in self.controller.taches_objets if t.id == dep_id), None)
+                    if dep_tache and dep_tache.status != "Terminee":
+                        dependances_non_terminees.append(str(dep_id))
+                
+                if dependances_non_terminees:
+                    deps_str = ", ".join(dependances_non_terminees)
+                    messagebox.showerror("Action bloquée", f"Impossible de terminer. Tâches requises non terminées : {deps_str}", parent=fenetre_mod)
+                    return
+
+            # --- NOUVEAU : Traitement et vérification des nouvelles dépendances ---
+            nouvelles_dependencies = None
+            if entree_deps is not None:
+                deps_brutes = entree_deps.get()
+                nouvelles_dependencies = [int(d.strip()) for d in deps_brutes.split(',') if d.strip().isdigit()]
+                
+                # Vérification : La nouvelle date ne peut pas être avant la date des dépendances
+                for dep_id in nouvelles_dependencies:
+                    dep_tache = next((t for t in self.controller.taches_objets if t.id == dep_id), None)
+                    if dep_tache:
+                        try:
+                            dep_date_obj = datetime.strptime(dep_tache.due_date, "%Y-%m-%d").date()
+                            if nouvelle_date_obj < dep_date_obj:
+                                messagebox.showerror("Erreur de Date", f"L'échéance ne peut pas être avant celle de la dépendance ID {dep_id} ({dep_tache.due_date}).", parent=fenetre_mod)
+                                return
+                        except ValueError:
+                            pass
+
+            self.controller.modifier_tache(task_id, nouveau_titre, nouvelle_priorite, nouvelle_date, nouveau_statut, nouvelles_dependencies)
             fenetre_mod.destroy()
             self.actualiser_liste()
 
@@ -204,6 +250,18 @@ class GUIView:
             if type_tache == "Complex" and entree_deps:
                 deps_brutes = entree_deps.get()
                 dependencies = [int(d.strip()) for d in deps_brutes.split(',') if d.strip().isdigit()]
+                
+                # --- NOUVEAU : Vérification des dates lors de l'ajout ---
+                for dep_id in dependencies:
+                    dep_tache = next((t for t in self.controller.taches_objets if t.id == dep_id), None)
+                    if dep_tache:
+                        try:
+                            dep_date_obj = datetime.strptime(dep_tache.due_date, "%Y-%m-%d").date()
+                            if date_selectionnee_obj < dep_date_obj:
+                                messagebox.showerror("Erreur de Date", f"L'échéance ne peut pas être avant la tâche dépendante ID {dep_id} ({dep_tache.due_date}).", parent=fenetre_ajout)
+                                return
+                        except ValueError:
+                            pass
 
             self.controller.ajouter_tache(titre, priorite, date_echeance, type_tache, dependencies)
             fenetre_ajout.destroy()
@@ -227,7 +285,7 @@ class GUIView:
             critiques = bridge.get_taches_critiques()
             
             message = f"Tâches bloquées : {bloquees if bloquees else 'Aucune'}\n"
-            message += f"Tâches en urgence absolue : {critiques if critiques else 'Aucune'}"
+            message += f"Tâches urgentes : {critiques if critiques else 'Aucune'}"
             messagebox.showinfo("Moteur Logique (Prolog)", message)
         except Exception as e:
             messagebox.showerror("Erreur Prolog", f"Impossible de contacter le moteur logique : {e}")

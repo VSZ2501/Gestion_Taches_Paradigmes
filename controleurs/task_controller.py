@@ -63,18 +63,42 @@ class TaskController:
         print(f"Objet tâche '{titre}' (Type: {type_tache}) instancié et sauvegardé.")
     
     def supprimer_tache(self, task_id):
-        """Supprime une tâche via son ID et sauvegarde."""
-        # On garde toutes les tâches SAUF celle qui a cet ID
+        """Supprime une tâche et la retire des dépendances des autres."""
+        # 1. Supprimer la tâche ciblée
         self.taches_objets = [t for t in self.taches_objets if t.id != task_id]
+        
+        # 2. Nettoyer les dépendances des tâches restantes
+        nouvelles_taches = []
+        for t in self.taches_objets:
+            if getattr(t, "task_type", "Simple") == "Complex":
+                if task_id in getattr(t, "dependencies", []):
+                    t.dependencies.remove(task_id)
+                    # Si elle n'a plus de dépendances, elle redevient une SimpleTask
+                    if len(t.dependencies) == 0:
+                        t = SimpleTask(t.id, t.title, t.status, t.due_date, t.priority)
+            nouvelles_taches.append(t)
+            
+        self.taches_objets = nouvelles_taches
         self.sauvegarder_taches()
 
-    def modifier_tache(self, task_id, titre, priorite, date_echeance, statut):
-        """Modifie les attributs d'une tâche existante."""
-        for t in self.taches_objets:
+    def modifier_tache(self, task_id, titre, priorite, date_echeance, statut, dependencies=None):
+        """Modifie une tâche et met à jour son type selon ses dépendances."""
+        for i, t in enumerate(self.taches_objets):
             if t.id == task_id:
-                t.title = titre
-                t.priority = priorite
-                t.due_date = date_echeance
-                t.status = statut
+                # Si le champ des dépendances a été manipulé dans le formulaire
+                if dependencies is not None:
+                    # Polymorphisme : Remplacement de l'objet pour changer son type
+                    if len(dependencies) > 0:
+                        from modeles.poo_models import ComplexTask
+                        self.taches_objets[i] = ComplexTask(task_id, titre, statut, date_echeance, priorite, dependencies)
+                    else:
+                        from modeles.poo_models import SimpleTask
+                        self.taches_objets[i] = SimpleTask(task_id, titre, statut, date_echeance, priorite)
+                else:
+                    # Garde son type actuel, met juste à jour les champs classiques
+                    t.title = titre
+                    t.priority = priorite
+                    t.due_date = date_echeance
+                    t.status = statut
                 break
         self.sauvegarder_taches()
