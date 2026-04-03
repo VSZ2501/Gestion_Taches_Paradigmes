@@ -4,9 +4,7 @@ import os
 # Fichier de stockage des données
 FICHIER_TACHES = "taches.json"
 
-# ==========================================
-# GESTION DU STOCKAGE (Données - Rôle de Victor)
-# ==========================================
+# Gestion du stockage
 
 def charger_taches():
     """Charge les tâches depuis le fichier JSON dans un tableau (liste)."""
@@ -21,15 +19,13 @@ def sauvegarder_taches(taches):
     with open(FICHIER_TACHES, 'w', encoding='utf-8') as fichier:
         json.dump(taches, fichier, indent=4, ensure_ascii=False)
 
-# ==========================================
-# GESTION DES TÂCHES CRUD (Logique - Rôle de Sofian)
-# ==========================================
+# tâches CRUD
 
 def creer_tache(titre, priorite, date_echeance):
     """(Create) Ajoute une nouvelle tâche."""
     taches = charger_taches()
     
-    # Génération d'un ID basique
+    # Génération d'un ID 
     nouvel_id = 1
     if len(taches) > 0:
         nouvel_id = taches[-1]["id"] + 1
@@ -47,7 +43,7 @@ def creer_tache(titre, priorite, date_echeance):
     print(f"Tâche créée avec succès : '{titre}'")
 
 def lire_taches():
-    """(Read) Affiche toutes les tâches."""
+    """Affiche toutes les tâches."""
     taches = charger_taches()
     print("\n--- Liste des Tâches ---")
     if not taches:
@@ -60,7 +56,7 @@ def lire_taches():
 def supprimer_tache(id_tache):
     """(Delete) Supprime une tâche selon son ID."""
     taches = charger_taches()
-    # Utilisation d'une boucle classique pour trouver et supprimer (approche impérative)
+
     index_a_supprimer = -1
     for i in range(len(taches)):
         if taches[i]["id"] == id_tache:
@@ -81,28 +77,26 @@ def trier_taches_par_priorite():
     taches_triees = sorted(taches, key=lambda x: x["priorite"])
     return taches_triees
 
-# ==========================================
-# ZONE DE TESTS (Vérification du fonctionnement)
-# ==========================================
+#tests
 
 if __name__ == "__main__":
     print("Démarrage des tests du module Impératif...\n")
     
-    # 1. Création de quelques tâches de test
+    # tâches de test
     creer_tache("Planifier la campagne marketing", 2, "2023-09-20")
     creer_tache("Approuver l'accord légal", 1, "2023-08-15")
     creer_tache("Mettre à jour la boutique en ligne", 3, "2023-09-15")
     
-    # 2. Lecture des tâches
+    # Lecture des tâches
     lire_taches()
     
-    # 3. Test du tri par priorité [cite: 68]
+    # Test du tri par priorité 
     print("--- Test du tri par priorité ---")
     taches_triees = trier_taches_par_priorite()
     for t in taches_triees:
         print(f"Priorité {t['priorite']} : {t['titre']}")
     print("--------------------------------\n")
     
-    # 4. Test de suppression
+    # Test de suppression
     supprimer_tache(1)
     lire_taches()

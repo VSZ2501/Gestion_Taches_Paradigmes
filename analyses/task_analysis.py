@@ -1,8 +1,6 @@
 from functools import reduce
 
-# ==========================================
-# FONCTIONS PURES (Analyse fonctionnelle)
-# ==========================================
+# Fonctions
 
 def filtrer_urgentes(taches):
     """

@@ -9,11 +9,11 @@ class PrologBridge:
 
     def preparer_faits(self, taches_objets):
         """Nettoie les anciens faits et injecte les nouveaux basés sur les objets Python."""
-        # 1. Nettoyage de la base de connaissances Prolog pour éviter les doublons
+        #  Nettoyage de la base de connaissances Prolog pour éviter les doublons
         list(self.prolog.query("retractall(tache(_, _, _))"))
         list(self.prolog.query("retractall(dependance(_, _))"))
 
-        # 2. Injection des nouveaux faits
+        #  Injection des nouveaux faits
         for t in taches_objets:
             # Calcul des jours restants pour la règle de priorité
             try:

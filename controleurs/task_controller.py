@@ -64,10 +64,10 @@ class TaskController:
     
     def supprimer_tache(self, task_id):
         """Supprime une tâche et la retire des dépendances des autres."""
-        # 1. Supprimer la tâche ciblée
+        #  Supprimer la tâche ciblée
         self.taches_objets = [t for t in self.taches_objets if t.id != task_id]
         
-        # 2. Nettoyer les dépendances des tâches restantes
+        #  Nettoyer les dépendances des tâches restantes
         nouvelles_taches = []
         for t in self.taches_objets:
             if getattr(t, "task_type", "Simple") == "Complex":
